@@ -1,0 +1,104 @@
+.settings-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.settings-page h1 {
+  font-size: 1.5rem;
+  margin: 0 0 2rem;
+}
+
+.settings-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.settings-section h2 {
+  font-size: 1.1rem;
+  margin: 0 0 1rem;
+  color: var(--text-primary);
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-row h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.setting-row p {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.setting-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.shortcuts-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.shortcut kbd {
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.shortcut span {
+  color: var(--text-secondary);
+}
+
+.formats-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.format-item {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: var(--hover);
+}
+
+.format-item strong {
+  color: var(--text-primary);
+}
+
+.about-info p {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.healthy {
+  color: #22c55e;
+  font-weight: 600;
+}

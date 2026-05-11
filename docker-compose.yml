@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - comic-data:/data/comics
+    environment:
+      - COMI_LIBRARY_PATH=/data/comics
+      - COMI_UPLOAD_PATH=/data/comics/uploads
+      - COMI_THUMBNAIL_PATH=/data/comics/thumbnails
+      - COMI_DATABASE_URL=sqlite+aiosqlite:///./data/comi.db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  comic-data:
