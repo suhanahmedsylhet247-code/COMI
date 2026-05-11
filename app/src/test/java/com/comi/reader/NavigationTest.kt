@@ -15,7 +15,7 @@ class NavigationTest {
         assertEquals("browse", Screen.Browse.route)
         assertEquals("settings", Screen.Settings.route)
         assertEquals("reader/{comicId}", Screen.Reader.route)
-        assertEquals("comic/{comicId}", Screen.ComicDetail.route)
+        assertEquals("detail/{comicId}", Screen.ComicDetail.route)
     }
 
     @Test
@@ -26,7 +26,16 @@ class NavigationTest {
 
     @Test
     fun `comic detail route creates correct path`() {
-        assertEquals("comic/42", Screen.ComicDetail.createRoute(42))
+        assertEquals("detail/42", Screen.ComicDetail.createRoute(42))
+    }
+
+    @Test
+    fun `new screen routes are correct`() {
+        assertEquals("search", Screen.Search.route)
+        assertEquals("categories", Screen.Categories.route)
+        assertEquals("downloads", Screen.Downloads.route)
+        assertEquals("statistics", Screen.Statistics.route)
+        assertEquals("backup", Screen.Backup.route)
     }
 
     @Test
@@ -44,10 +53,10 @@ class NavigationTest {
     }
 
     @Test
-    fun `bottom nav items have correct screens`() {
-        assertEquals(Screen.Library, bottomNavItems[0].screen)
-        assertEquals(Screen.History, bottomNavItems[1].screen)
-        assertEquals(Screen.Browse, bottomNavItems[2].screen)
-        assertEquals(Screen.Settings, bottomNavItems[3].screen)
+    fun `bottom nav items have correct routes`() {
+        assertEquals(Screen.Library.route, bottomNavItems[0].route)
+        assertEquals(Screen.History.route, bottomNavItems[1].route)
+        assertEquals(Screen.Browse.route, bottomNavItems[2].route)
+        assertEquals(Screen.Settings.route, bottomNavItems[3].route)
     }
 }

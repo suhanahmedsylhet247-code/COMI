@@ -11,59 +11,74 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val LightColors = lightColorScheme(
+private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF6366F1),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE0E7FF),
-    onPrimaryContainer = Color(0xFF1E1B4B),
-    secondary = Color(0xFF8B5CF6),
+    primaryContainer = Color(0xFFE0E0FF),
+    onPrimaryContainer = Color(0xFF1B1B6B),
+    secondary = Color(0xFF9333EA),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFEDE9FE),
-    onSecondaryContainer = Color(0xFF2E1065),
+    secondaryContainer = Color(0xFFF3E0FF),
+    onSecondaryContainer = Color(0xFF3B0764),
     tertiary = Color(0xFFEC4899),
     onTertiary = Color.White,
-    background = Color(0xFFF8FAFC),
-    onBackground = Color(0xFF0F172A),
-    surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF0F172A),
-    surfaceVariant = Color(0xFFF1F5F9),
-    onSurfaceVariant = Color(0xFF64748B),
-    outline = Color(0xFFCBD5E1)
+    tertiaryContainer = Color(0xFFFFE0F0),
+    onTertiaryContainer = Color(0xFF5C0A33),
+    background = Color(0xFFF8F8FF),
+    onBackground = Color(0xFF1A1A2E),
+    surface = Color(0xFFF8F8FF),
+    onSurface = Color(0xFF1A1A2E),
+    surfaceVariant = Color(0xFFE8E0F0),
+    onSurfaceVariant = Color(0xFF49454F),
+    error = Color(0xFFEF4444)
 )
 
-private val DarkColors = darkColorScheme(
+private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF818CF8),
     onPrimary = Color(0xFF1E1B4B),
-    primaryContainer = Color(0xFF312E81),
-    onPrimaryContainer = Color(0xFFE0E7FF),
-    secondary = Color(0xFFA78BFA),
-    onSecondary = Color(0xFF2E1065),
-    secondaryContainer = Color(0xFF4C1D95),
-    onSecondaryContainer = Color(0xFFEDE9FE),
+    primaryContainer = Color(0xFF3730A3),
+    onPrimaryContainer = Color(0xFFE0E0FF),
+    secondary = Color(0xFFA855F7),
+    onSecondary = Color(0xFF3B0764),
+    secondaryContainer = Color(0xFF6B21A8),
+    onSecondaryContainer = Color(0xFFF3E0FF),
     tertiary = Color(0xFFF472B6),
-    onTertiary = Color(0xFF831843),
-    background = Color(0xFF0F172A),
-    onBackground = Color(0xFFE2E8F0),
-    surface = Color(0xFF1E293B),
-    onSurface = Color(0xFFE2E8F0),
-    surfaceVariant = Color(0xFF334155),
-    onSurfaceVariant = Color(0xFF94A3B8),
-    outline = Color(0xFF475569)
+    onTertiary = Color(0xFF5C0A33),
+    tertiaryContainer = Color(0xFFBE185D),
+    onTertiaryContainer = Color(0xFFFFE0F0),
+    background = Color(0xFF121212),
+    onBackground = Color(0xFFE6E1E5),
+    surface = Color(0xFF1C1C1E),
+    onSurface = Color(0xFFE6E1E5),
+    surfaceVariant = Color(0xFF2C2C2E),
+    onSurfaceVariant = Color(0xFFCAC4D0),
+    error = Color(0xFFF87171)
+)
+
+private val AmoledDarkColorScheme = DarkColorScheme.copy(
+    background = Color.Black,
+    surface = Color.Black,
+    surfaceVariant = Color(0xFF1A1A1A)
 )
 
 @Composable
 fun ComiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    amoledDark: Boolean = false,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (darkTheme) {
+                val scheme = dynamicDarkColorScheme(context)
+                if (amoledDark) scheme.copy(background = Color.Black, surface = Color.Black) else scheme
+            } else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColors
-        else -> LightColors
+        darkTheme && amoledDark -> AmoledDarkColorScheme
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
     }
 
     MaterialTheme(

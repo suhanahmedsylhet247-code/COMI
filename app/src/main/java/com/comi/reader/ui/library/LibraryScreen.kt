@@ -72,6 +72,7 @@ import java.io.File
 @Composable
 fun LibraryScreen(
     onComicClick: (Long) -> Unit,
+    onSearchClick: () -> Unit = {},
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()

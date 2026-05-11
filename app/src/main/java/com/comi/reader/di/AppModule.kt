@@ -5,6 +5,11 @@ import androidx.room.Room
 import com.comi.reader.data.local.ComiDatabase
 import com.comi.reader.data.local.dao.ComicDao
 import com.comi.reader.data.parser.ComicParser
+import com.comi.reader.data.preferences.AppPreferences
+import com.comi.reader.data.tracker.AniListTracker
+import com.comi.reader.data.tracker.KitsuTracker
+import com.comi.reader.data.tracker.MyAnimeListTracker
+import com.comi.reader.data.tracker.TrackerApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,8 +27,8 @@ object AppModule {
         return Room.databaseBuilder(
             context,
             ComiDatabase::class.java,
-            "comi.db"
-        ).build()
+            "comi_database"
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
@@ -36,5 +41,21 @@ object AppModule {
     @Singleton
     fun provideComicParser(@ApplicationContext context: Context): ComicParser {
         return ComicParser(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppPreferences(@ApplicationContext context: Context): AppPreferences {
+        return AppPreferences(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTrackers(): List<TrackerApi> {
+        return listOf(
+            MyAnimeListTracker(),
+            AniListTracker(),
+            KitsuTracker()
+        )
     }
 }

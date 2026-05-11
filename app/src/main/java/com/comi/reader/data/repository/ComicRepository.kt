@@ -9,20 +9,25 @@ import com.comi.reader.data.local.entity.BookmarkEntity
 import com.comi.reader.data.local.entity.ChapterEntity
 import com.comi.reader.data.local.entity.ComicEntity
 import com.comi.reader.data.local.entity.ReadingProgressEntity
+import com.comi.reader.data.local.entity.SearchHistoryEntity
 import com.comi.reader.data.parser.ComicParser
+import com.comi.reader.data.preferences.AppPreferences
 import com.comi.reader.domain.model.Bookmark
 import com.comi.reader.domain.model.Chapter
 import com.comi.reader.domain.model.Comic
 import com.comi.reader.domain.model.ComicFormat
 import com.comi.reader.domain.model.HistoryEntry
+import com.comi.reader.domain.model.MangaStatus
 import com.comi.reader.domain.model.ReadingProgress
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +36,7 @@ import javax.inject.Singleton
 class ComicRepository @Inject constructor(
     private val dao: ComicDao,
     private val parser: ComicParser,
+    private val preferences: AppPreferences,
     @ApplicationContext private val context: Context
 ) {
 
@@ -49,7 +55,19 @@ class ComicRepository @Inject constructor(
     fun getComicsByCategory(category: String): Flow<List<Comic>> =
         dao.getComicsByCategory(category).map { list -> list.map { it.toDomain() } }
 
+    fun getComicsByStatus(status: String): Flow<List<Comic>> =
+        dao.getComicsByStatus(status).map { list -> list.map { it.toDomain() } }
+
+    fun getComicsByGenre(genre: String): Flow<List<Comic>> =
+        dao.getComicsByGenre(genre).map { list -> list.map { it.toDomain() } }
+
     fun getCategories(): Flow<List<String>> = dao.getCategories()
+
+    fun getGenres(): Flow<List<String>> = dao.getGenres()
+
+    fun getComicCount(): Flow<Int> = dao.getComicCount()
+    fun getFavoriteCount(): Flow<Int> = dao.getFavoriteCount()
+    fun getCompletedCount(): Flow<Int> = dao.getCompletedCount()
 
     suspend fun getComic(id: Long): Comic? = dao.getComicById(id)?.toDomain()
 
@@ -81,6 +99,7 @@ class ComicRepository @Inject constructor(
         val entity = ComicEntity(
             title = title,
             author = metadata["author"],
+            artist = metadata["artist"],
             description = metadata["description"],
             coverPath = coverPath,
             filePath = destFile.absolutePath,
@@ -90,12 +109,13 @@ class ComicRepository @Inject constructor(
             series = metadata["series"],
             volume = metadata["volume"]?.toIntOrNull(),
             publisher = metadata["publisher"],
-            year = metadata["year"]?.toIntOrNull()
+            year = metadata["year"]?.toIntOrNull(),
+            genre = metadata["genre"],
+            tags = metadata["tags"]
         )
 
         val id = dao.insertComic(entity)
 
-        // Create a single chapter for local files
         dao.insertChapter(
             ChapterEntity(
                 comicId = id,
@@ -131,6 +151,7 @@ class ComicRepository @Inject constructor(
         val entity = ComicEntity(
             title = title,
             author = metadata["author"],
+            artist = metadata["artist"],
             description = metadata["description"],
             coverPath = coverPath,
             filePath = file.absolutePath,
@@ -140,7 +161,9 @@ class ComicRepository @Inject constructor(
             series = metadata["series"],
             volume = metadata["volume"]?.toIntOrNull(),
             publisher = metadata["publisher"],
-            year = metadata["year"]?.toIntOrNull()
+            year = metadata["year"]?.toIntOrNull(),
+            genre = metadata["genre"],
+            tags = metadata["tags"]
         )
 
         val id = dao.insertComic(entity)
@@ -164,7 +187,11 @@ class ComicRepository @Inject constructor(
                 existing.copy(
                     title = comic.title,
                     author = comic.author,
+                    artist = comic.artist,
                     description = comic.description,
+                    genre = comic.genre,
+                    tags = comic.tags,
+                    status = comic.status.name,
                     category = comic.category,
                     isFavorite = comic.isFavorite,
                     updatedAt = System.currentTimeMillis()
@@ -198,6 +225,9 @@ class ComicRepository @Inject constructor(
     }
 
     suspend fun updateProgress(comicId: Long, currentPage: Int, totalPages: Int) {
+        val isIncognito = preferences.incognitoMode.first()
+        if (isIncognito) return
+
         val percentage = if (totalPages > 0) (currentPage + 1).toFloat() / totalPages else 0f
         val existing = dao.getProgress(comicId)
         val now = System.currentTimeMillis()
@@ -224,17 +254,40 @@ class ComicRepository @Inject constructor(
                 )
             )
         }
+
+        // Update reading statistics
+        val today = LocalDate.now().toString()
+        val lastDate = preferences.lastReadDate.first()
+        if (lastDate != today) {
+            if (lastDate == LocalDate.now().minusDays(1).toString()) {
+                val streak = preferences.readingStreakDays.first()
+                preferences.setReadingStreak(streak + 1)
+            } else if (lastDate != today) {
+                preferences.setReadingStreak(1)
+            }
+            preferences.setLastReadDate(today)
+        }
     }
 
-    fun getReadingHistory(limit: Int = 20): Flow<List<HistoryEntry>> {
+    fun getReadingHistory(limit: Int = 50): Flow<List<HistoryEntry>> {
         return dao.getReadingHistory(limit).map { list ->
             list.map { it.toDomain() }
         }
     }
 
+    suspend fun clearAllHistory() {
+        dao.clearAllHistory()
+    }
+
     // Bookmarks
     fun getBookmarks(comicId: Long): Flow<List<Bookmark>> {
         return dao.getBookmarksForComic(comicId).map { list ->
+            list.map { it.toDomain() }
+        }
+    }
+
+    fun getRecentBookmarks(limit: Int = 20): Flow<List<Bookmark>> {
+        return dao.getRecentBookmarks(limit).map { list ->
             list.map { it.toDomain() }
         }
     }
@@ -254,6 +307,10 @@ class ComicRepository @Inject constructor(
         dao.deleteBookmarkById(id)
     }
 
+    suspend fun deleteAllBookmarksForComic(comicId: Long) {
+        dao.deleteAllBookmarksForComic(comicId)
+    }
+
     // Chapters
     fun getChapters(comicId: Long): Flow<List<Chapter>> {
         return dao.getChaptersForComic(comicId).map { list ->
@@ -261,10 +318,52 @@ class ComicRepository @Inject constructor(
         }
     }
 
+    suspend fun getChapterCount(comicId: Long): Int = dao.getChapterCount(comicId)
+    suspend fun getReadChapterCount(comicId: Long): Int = dao.getReadChapterCount(comicId)
+    suspend fun getDownloadedChapterCount(comicId: Long): Int = dao.getDownloadedChapterCount(comicId)
+
+    suspend fun toggleChapterRead(chapterId: Long) {
+        dao.getChapterById(chapterId)?.let { chapter ->
+            dao.setChapterRead(chapterId, !chapter.isRead)
+            if (!chapter.isRead) {
+                preferences.incrementChaptersRead()
+            }
+        }
+    }
+
+    suspend fun setChapterRead(chapterId: Long, isRead: Boolean) {
+        dao.setChapterRead(chapterId, isRead)
+        if (isRead) preferences.incrementChaptersRead()
+    }
+
+    suspend fun markAllChaptersRead(comicId: Long) {
+        dao.markAllChaptersRead(comicId)
+    }
+
+    suspend fun markAllChaptersUnread(comicId: Long) {
+        dao.markAllChaptersUnread(comicId)
+    }
+
     suspend fun updateChapterProgress(chapterId: Long, lastPage: Int, isRead: Boolean) {
         dao.getChapterById(chapterId)?.let { chapter ->
             dao.updateChapter(chapter.copy(lastPageRead = lastPage, isRead = isRead))
         }
+    }
+
+    // Search history
+    fun getSearchHistory(limit: Int = 10): Flow<List<String>> {
+        return dao.getSearchHistory(limit).map { list -> list.map { it.query } }
+    }
+
+    suspend fun addSearchHistory(query: String) {
+        if (query.isBlank()) return
+        val isIncognito = preferences.incognitoMode.first()
+        if (isIncognito) return
+        dao.insertSearchHistory(SearchHistoryEntity(query = query))
+    }
+
+    suspend fun clearSearchHistory() {
+        dao.clearSearchHistory()
     }
 
     // Scan directory for comics
@@ -279,9 +378,7 @@ class ComicRepository @Inject constructor(
                     if (dao.getComicByPath(file.absolutePath) == null) {
                         results.add(importFromFile(file))
                     }
-                } catch (_: Exception) {
-                    // Skip files that can't be imported
-                }
+                } catch (_: Exception) { }
             }
 
         results
@@ -302,6 +399,7 @@ class ComicRepository @Inject constructor(
         id = id,
         title = title,
         author = author,
+        artist = artist,
         description = description,
         coverPath = coverPath,
         filePath = filePath,
@@ -312,8 +410,14 @@ class ComicRepository @Inject constructor(
         volume = volume,
         publisher = publisher,
         year = year,
+        genre = genre,
+        tags = tags,
+        status = try { MangaStatus.valueOf(status) } catch (_: Exception) { MangaStatus.UNKNOWN },
         category = category,
         isFavorite = isFavorite,
+        sourceId = sourceId,
+        remoteUrl = remoteUrl,
+        lastChapterFetch = lastChapterFetch?.let { Instant.ofEpochMilli(it) },
         addedAt = Instant.ofEpochMilli(addedAt),
         updatedAt = Instant.ofEpochMilli(updatedAt)
     )
@@ -326,9 +430,13 @@ class ComicRepository @Inject constructor(
         pageCount = pageCount,
         filePath = filePath,
         url = url,
+        scanlator = scanlator,
         isDownloaded = isDownloaded,
         isRead = isRead,
+        isBookmarked = isBookmarked,
         lastPageRead = lastPageRead,
+        dateUpload = dateUpload,
+        dateFetch = dateFetch,
         addedAt = Instant.ofEpochMilli(addedAt)
     )
 
@@ -351,6 +459,7 @@ class ComicRepository @Inject constructor(
         pageNumber = pageNumber,
         label = label,
         note = note,
+        thumbnailPath = thumbnailPath,
         createdAt = Instant.ofEpochMilli(createdAt)
     )
 

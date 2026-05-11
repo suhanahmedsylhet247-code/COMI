@@ -119,7 +119,7 @@ class ModelsTest {
 
     @Test
     fun `download status states`() {
-        assertEquals(5, DownloadStatus.entries.size)
+        assertEquals(6, DownloadStatus.entries.size)
         val task = DownloadTask(
             comicId = 1,
             chapterId = 1,
