@@ -1,177 +1,173 @@
-# COMI - Comic Reader
+# COMI - Comic Reader for Android
 
-A comprehensive, high-feature comic reader web application with support for CBZ, CBR, and PDF formats.
+A native Android comic reader app inspired by **Tachiyomi**, **Kotatsu**, and **Komikku**. Built with Kotlin, Jetpack Compose, and Material 3.
 
 ## Features
 
-### Core Reader
-- **Multi-format support**: CBZ (ZIP), CBR (RAR), and PDF comic files
-- **Three viewing modes**: Single page, double page spread, and vertical scroll
-- **Fit modes**: Fit to width, fit to height, original size with zoom controls
-- **Keyboard navigation**: Arrow keys, A/D, Space, Home/End, F for fullscreen
-- **Click navigation**: Click left/right halves of the page to navigate
+### Comic Reader
+- **Multi-format support**: CBZ (ZIP archives), CBR (RAR archives), PDF
+- **Four reading modes**: Left-to-Right, Right-to-Left (Manga), Vertical, Webtoon (continuous scroll)
+- **Tap navigation**: Tap left/right thirds of screen to navigate, center to toggle controls
+- **Page slider**: Scrub through pages with the bottom slider
+- **Fullscreen reading**: Immersive mode with animated controls overlay
+- **Auto-save progress**: Reading position saved automatically
 
 ### Library Management
-- **Upload comics**: Drag-and-drop or browse to upload comic files
-- **Library scanning**: Automatically scan a directory for comic files
-- **Search & filter**: Search by title, author, or series
-- **Sort options**: Sort by date added, title, year, author, or series
-- **Tag system**: Organize comics with custom tags
-- **Grid/list views**: Switch between grid and list display modes
-- **Metadata extraction**: Automatic extraction from ComicInfo.xml (CBZ) and PDF metadata
+- **Import comics**: Pick CBZ/CBR/PDF files from your device
+- **Grid & list views**: Switch between compact grid and detailed list
+- **Search**: Find comics by title, author, or series
+- **Sort options**: By title, recently added, recently read, or author
+- **Favorites**: Mark comics as favorites with quick filter
+- **Delete management**: Long-press to remove comics
+- **Metadata extraction**: Reads ComicInfo.xml from CBZ files automatically
 
 ### Reading Progress
-- **Automatic tracking**: Reading progress saved automatically as you read
-- **Continue reading**: Quick access to recently read comics on the home page
-- **Progress indicators**: Visual progress bars on comic cards
-- **Completion tracking**: Tracks when you finish reading a comic
+- **Automatic tracking**: Progress saved on every page turn
+- **History screen**: See all recently read comics with progress bars
+- **Continue reading**: Jump right back where you left off
+- **Completion detection**: Tracks when you finish a comic
 
 ### Bookmarks
-- **Page bookmarks**: Bookmark any page with optional labels and notes
-- **Bookmark panel**: Quick access to all bookmarks within the reader
-- **Jump to bookmark**: Click any bookmark to jump to that page
+- **Bookmark any page**: Quick-toggle bookmark on current page
+- **Bookmark panel**: Bottom sheet showing all bookmarks for the current comic
+- **Jump to bookmark**: Tap any bookmark to navigate to that page
+- **Labels & notes**: Add context to your bookmarks
 
-### UI/UX
-- **Dark/light themes**: Toggle between dark and light modes
-- **Responsive design**: Works on desktop and tablet screens
-- **Fullscreen mode**: Immersive reading with fullscreen support
-- **Cover thumbnails**: Automatic thumbnail generation for library view
+### Extension System
+- **Source API**: Plugin interface for third-party manga sources (like Tachiyomi)
+- **Source registry**: Register/unregister manga source extensions
+- **Local source**: Built-in source for local file management
+- **Browse screen**: UI placeholder for extension discovery (coming soon)
+
+### Settings
+- **Dark/Light theme**: Toggle between themes with Material You dynamic colors
+- **Default reading mode**: Set your preferred reading direction
+- **Storage management**: Internal storage for imported comics
+- **Extension management**: Configure source extensions
+
+### Download Manager
+- **Foreground service**: Background download with notification
+- **Download queue**: Manage pending and active downloads
+- **Progress tracking**: Track download completion percentage
 
 ## Tech Stack
 
-### Backend
-- **FastAPI** - Modern async Python web framework
-- **SQLAlchemy** (async) - Database ORM with SQLite
-- **PyMuPDF** (fitz) - PDF parsing and rendering
-- **Pillow** - Image processing and thumbnail generation
-- **rarfile** - CBR (RAR) archive support
-
-### Frontend
-- **React 18** - UI framework
-- **TypeScript** - Type-safe JavaScript
-- **Vite** - Build tool and dev server
-- **React Router** - Client-side routing
-- **Vitest** - Testing framework
-
-## Getting Started
-
-### Prerequisites
-- Python 3.11+
-- Node.js 22+
-- `unrar` (for CBR support): `sudo apt-get install unrar-free`
-
-### Backend Setup
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-uvicorn app.main:app --reload
-```
-
-The API server runs at http://localhost:8000. API docs at http://localhost:8000/docs.
-
-### Frontend Setup
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The frontend dev server runs at http://localhost:5173 with API proxy to the backend.
-
-### Docker Setup
-
-```bash
-docker-compose up --build
-```
-
-Access the app at http://localhost:3000.
-
-## Running Tests
-
-### Backend Tests
-```bash
-cd backend
-pytest -v
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
-
-### Linting
-```bash
-# Backend
-cd backend
-ruff check app/ tests/
-
-# Frontend
-cd frontend
-npx tsc --noEmit
-```
-
-## API Endpoints
-
-### Library
-- `GET /api/library/comics` - List comics (paginated, searchable, sortable)
-- `GET /api/library/comics/{id}` - Get comic details
-- `PUT /api/library/comics/{id}` - Update comic metadata
-- `DELETE /api/library/comics/{id}` - Delete a comic
-- `POST /api/library/upload` - Upload a comic file
-- `POST /api/library/scan` - Scan library directory for comics
-- `GET /api/library/tags` - List all tags
-- `GET /api/library/series` - List all series
-
-### Reader
-- `GET /api/comics/{id}/page/{page}` - Get a page image
-- `GET /api/comics/{id}/page-info/{page}` - Get page metadata
-- `GET /api/comics/{id}/thumbnail` - Get cover thumbnail
-
-### Progress & Bookmarks
-- `GET /api/progress/{comic_id}` - Get reading progress
-- `PUT /api/progress/{comic_id}` - Update reading progress
-- `GET /api/progress/` - Get reading history
-- `POST /api/progress/{comic_id}/bookmarks` - Add bookmark
-- `GET /api/progress/{comic_id}/bookmarks` - List bookmarks
-- `DELETE /api/progress/bookmarks/{id}` - Delete bookmark
-
-### System
-- `GET /api/health` - Health check
+| Component | Technology |
+|-----------|-----------|
+| Language | Kotlin |
+| UI | Jetpack Compose + Material 3 |
+| Architecture | MVVM + Repository pattern |
+| DI | Hilt (Dagger) |
+| Database | Room |
+| Image Loading | Coil |
+| Navigation | Compose Navigation |
+| PDF | Android PdfRenderer |
+| Network | OkHttp |
+| Serialization | kotlinx.serialization |
+| Testing | JUnit 4 + MockK + Coroutines Test |
 
 ## Project Structure
 
 ```
 COMI/
-├── backend/
-│   ├── app/
-│   │   ├── models/        # SQLAlchemy models
-│   │   ├── routers/       # FastAPI route handlers
-│   │   ├── schemas/       # Pydantic schemas
-│   │   ├── services/      # Business logic
-│   │   ├── config.py      # App configuration
-│   │   ├── database.py    # Database setup
-│   │   └── main.py        # App entry point
-│   ├── tests/             # Backend tests
-│   └── pyproject.toml
-├── frontend/
-│   ├── src/
-│   │   ├── api/           # API client
-│   │   ├── components/    # React components
-│   │   ├── context/       # React contexts
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── pages/         # Page components
-│   │   └── types/         # TypeScript types
-│   ├── __tests__/         # Frontend tests
-│   └── package.json
-├── .github/workflows/     # CI configuration
-├── docker-compose.yml     # Docker setup
-└── README.md
+├── app/src/main/java/com/comi/reader/
+│   ├── ComiApplication.kt          # Hilt application
+│   ├── data/
+│   │   ├── local/
+│   │   │   ├── ComiDatabase.kt     # Room database
+│   │   │   ├── dao/ComicDao.kt     # Data access objects
+│   │   │   ├── entity/Entities.kt  # Database entities
+│   │   │   └── converter/          # Type converters
+│   │   ├── parser/ComicParser.kt   # CBZ/CBR/PDF parsing
+│   │   └── repository/
+│   │       ├── ComicRepository.kt  # Data repository
+│   │       └── DownloadService.kt  # Download foreground service
+│   ├── di/AppModule.kt             # Hilt dependency injection
+│   ├── domain/model/Models.kt      # Domain models
+│   ├── extension/
+│   │   ├── api/                    # Source extension API
+│   │   └── model/                  # Extension data models
+│   ├── ui/
+│   │   ├── MainActivity.kt        # Main activity + navigation
+│   │   ├── library/                # Library screen + ViewModel
+│   │   ├── reader/                 # Reader screen + ViewModel
+│   │   ├── history/                # History screen + ViewModel
+│   │   ├── settings/               # Settings screen
+│   │   ├── components/             # Shared UI components
+│   │   ├── navigation/             # Navigation routes
+│   │   └── theme/                  # Material theme
+│   └── util/                       # Utility classes
+├── app/src/test/                    # Unit tests
+├── .github/workflows/ci.yml        # GitHub Actions CI
+└── build.gradle.kts                # Build configuration
 ```
+
+## Building
+
+### Prerequisites
+- Android Studio Ladybug (2024.2.1) or later
+- JDK 17
+- Android SDK 35
+
+### Build from Android Studio
+1. Clone the repo: `git clone https://github.com/suhanahmedsylhet247-code/COMI.git`
+2. Open in Android Studio
+3. Sync Gradle
+4. Run on device/emulator (API 26+)
+
+### Build from CLI
+```bash
+# Debug APK
+./gradlew assembleDebug
+
+# Run unit tests
+./gradlew test
+
+# APK location
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+## Testing
+
+```bash
+# Run all unit tests
+./gradlew test
+
+# Tests cover:
+# - Comic format detection (CBZ, CBR, PDF, ZIP)
+# - Domain model validation
+# - File utility functions
+# - Extension system (source registry, local source)
+# - Navigation routes
+```
+
+## Architecture
+
+COMI follows **MVVM + Clean Architecture** principles:
+
+```
+UI Layer (Compose) → ViewModel → Repository → Data Sources (Room, Parser, Network)
+```
+
+- **UI Layer**: Jetpack Compose screens with state hoisting
+- **ViewModel**: Manages UI state with StateFlow, handles user actions
+- **Repository**: Single source of truth, coordinates data sources
+- **Data Layer**: Room database, ComicParser for file reading, network for extensions
+
+## Keyboard Shortcuts (with physical keyboard)
+
+| Key | Action |
+|-----|--------|
+| Volume Up / D-Pad Right | Next page |
+| Volume Down / D-Pad Left | Previous page |
+
+## Supported Formats
+
+| Format | Extension | Support |
+|--------|-----------|---------|
+| CBZ | .cbz, .zip | Full (ZIP with images) |
+| PDF | .pdf | Full (Android PdfRenderer) |
+| CBR | .cbr | Partial (requires native RAR lib) |
 
 ## License
 

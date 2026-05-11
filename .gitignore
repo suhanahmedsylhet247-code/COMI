@@ -1,32 +1,36 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-dist/
+# Gradle
+.gradle/
 build/
-*.db
-.venv/
-venv/
-
-# Node
-node_modules/
-frontend/dist/
+!gradle/wrapper/
 
 # IDE
-.vscode/
 .idea/
-*.swp
-*.swo
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Kotlin
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+
+# Android
+local.properties
+*.apk
+*.aab
+*.dex
+*.ap_
+*.jks
+*.keystore
 
 # OS
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
 
 # App data
-*.jpg
-*.jpeg
-*.png
-!frontend/public/favicon.svg
-thumbnails/
-uploads/
-comics/
+*.db
