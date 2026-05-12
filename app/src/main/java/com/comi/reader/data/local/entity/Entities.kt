@@ -15,8 +15,8 @@ data class ComicEntity(
     val artist: String? = null,
     val description: String? = null,
     @ColumnInfo(name = "cover_path") val coverPath: String? = null,
-    @ColumnInfo(name = "file_path") val filePath: String,
-    val format: String,
+    @ColumnInfo(name = "file_path") val filePath: String = "",
+    val format: String = "SOURCE",
     @ColumnInfo(name = "file_size") val fileSize: Long = 0,
     @ColumnInfo(name = "page_count") val pageCount: Int = 0,
     val series: String? = null,
@@ -199,4 +199,23 @@ data class SearchHistoryEntity(
     val id: Long = 0,
     val query: String,
     @ColumnInfo(name = "searched_at") val searchedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "extension_repos")
+data class ExtensionRepoEntity(
+    @PrimaryKey
+    val url: String,
+    val name: String,
+    @ColumnInfo(name = "added_at") val addedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(
+    tableName = "manga_groups",
+    indices = [Index("group_id")]
+)
+data class MangaGroupEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    @ColumnInfo(name = "comic_id") val comicId: Long,
+    @ColumnInfo(name = "group_id") val groupId: Long,
 )

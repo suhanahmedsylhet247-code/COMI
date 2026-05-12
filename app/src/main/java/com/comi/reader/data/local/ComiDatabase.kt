@@ -11,6 +11,8 @@ import com.comi.reader.data.local.entity.ChapterEntity
 import com.comi.reader.data.local.entity.ComicCategoryEntity
 import com.comi.reader.data.local.entity.ComicEntity
 import com.comi.reader.data.local.entity.DownloadTaskEntity
+import com.comi.reader.data.local.entity.ExtensionRepoEntity
+import com.comi.reader.data.local.entity.MangaGroupEntity
 import com.comi.reader.data.local.entity.ReadingProgressEntity
 import com.comi.reader.data.local.entity.SearchHistoryEntity
 import com.comi.reader.data.local.entity.TrackingEntity
@@ -25,9 +27,11 @@ import com.comi.reader.data.local.entity.TrackingEntity
         CategoryEntity::class,
         ComicCategoryEntity::class,
         TrackingEntity::class,
-        SearchHistoryEntity::class
+        SearchHistoryEntity::class,
+        ExtensionRepoEntity::class,
+        MangaGroupEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(InstantConverter::class)

@@ -275,4 +275,61 @@ interface ComicDao {
 
     @Query("DELETE FROM search_history WHERE id = :id")
     suspend fun deleteSearchHistoryEntry(id: Long)
+
+    // Extension repos
+    @Query("SELECT * FROM extension_repos ORDER BY added_at ASC")
+    fun getAllExtensionRepos(): Flow<List<com.comi.reader.data.local.entity.ExtensionRepoEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExtensionRepo(repo: com.comi.reader.data.local.entity.ExtensionRepoEntity)
+
+    @Query("DELETE FROM extension_repos WHERE url = :url")
+    suspend fun deleteExtensionRepo(url: String)
+
+    // Manga groups (for cross-source deduplication)
+    @Query("SELECT * FROM manga_groups WHERE comic_id = :comicId")
+    suspend fun getMangaGroupForComic(comicId: Long): com.comi.reader.data.local.entity.MangaGroupEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMangaGroup(group: com.comi.reader.data.local.entity.MangaGroupEntity)
+
+    @Query("DELETE FROM manga_groups WHERE comic_id = :comicId")
+    suspend fun deleteMangaGroup(comicId: Long)
+
+    @Query("UPDATE manga_groups SET group_id = :newGroupId WHERE group_id = :oldGroupId")
+    suspend fun updateMangaGroupId(oldGroupId: Long, newGroupId: Long)
+
+    @Query("""
+        SELECT c.* FROM comics c
+        INNER JOIN manga_groups mg ON c.id = mg.comic_id
+        WHERE mg.group_id = (SELECT group_id FROM manga_groups WHERE comic_id = :comicId LIMIT 1)
+    """)
+    suspend fun getComicsInGroup(comicId: Long): List<ComicEntity>
+
+    @Query("""
+        SELECT c.* FROM comics c
+        INNER JOIN manga_groups mg ON c.id = mg.comic_id
+        WHERE mg.group_id = (SELECT group_id FROM manga_groups WHERE comic_id = :comicId LIMIT 1)
+    """)
+    fun getComicsInGroupFlow(comicId: Long): Flow<List<ComicEntity>>
+
+    @Query("SELECT * FROM comics")
+    suspend fun getAllComicsSnapshot(): List<ComicEntity>
+
+    // Source-specific queries
+    @Query("SELECT * FROM comics WHERE source_id = :sourceId AND remote_url = :remoteUrl LIMIT 1")
+    suspend fun getComicBySourceAndUrl(sourceId: String, remoteUrl: String): ComicEntity?
+
+    @Query("SELECT * FROM comics WHERE source_id IS NOT NULL ORDER BY updated_at DESC")
+    fun getSourceComics(): Flow<List<ComicEntity>>
+
+    @Query("SELECT DISTINCT source_id FROM comics WHERE source_id IS NOT NULL")
+    suspend fun getUsedSourceIds(): List<String>
+
+    @Query("SELECT * FROM chapters WHERE comic_id = :comicId ORDER BY number ASC")
+    suspend fun getChaptersForComicSnapshot(comicId: Long): List<ChapterEntity>
+
+    // Chapters by source
+    @Query("SELECT * FROM chapters WHERE comic_id IN (SELECT id FROM comics WHERE source_id = :sourceId) ORDER BY number ASC")
+    suspend fun getChaptersBySource(sourceId: String): List<ChapterEntity>
 }

@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
@@ -78,6 +79,8 @@ dependencies {
     // Hilt DI
     implementation("com.google.dagger:hilt-android:2.51.1")
     ksp("com.google.dagger:hilt-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Image loading
@@ -86,10 +89,24 @@ dependencies {
     // PDF rendering (Android built-in PdfRenderer)
     // No extra dependency needed for PDF
 
-    // Network (for extensions)
+    // Network
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // RxJava (required for Tachiyomi extension API compatibility)
+    implementation("io.reactivex:rxjava:1.3.8")
+    implementation("io.reactivex:rxandroid:1.2.1")
+
+    // Jsoup (required for ParsedHttpSource extensions)
+    implementation("org.jsoup:jsoup:1.18.3")
+
+    // Injekt (Tachiyomi extension DI - extensions use this to get NetworkHelper)
+    implementation("uy.kohesive.injekt:injekt-core:1.16.1")
+
+    // WorkManager (for background update checking)
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
 
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.1.1")

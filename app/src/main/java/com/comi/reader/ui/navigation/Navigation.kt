@@ -23,6 +23,13 @@ sealed class Screen(val route: String) {
     data object Downloads : Screen("downloads")
     data object Statistics : Screen("statistics")
     data object Backup : Screen("backup")
+    data object SourceBrowse : Screen("source/{sourceId}") {
+        fun createRoute(sourceId: Long) = "source/$sourceId"
+    }
+    data object MangaDetail : Screen("manga_detail/{mangaUrl}/{sourceId}") {
+        fun createRoute(mangaUrl: String, sourceId: Long) =
+            "manga_detail/${java.net.URLEncoder.encode(mangaUrl, "UTF-8")}/$sourceId"
+    }
 }
 
 data class BottomNavItem(

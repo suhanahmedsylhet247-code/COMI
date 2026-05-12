@@ -1,99 +1,107 @@
 package com.comi.reader
 
-import com.comi.reader.extension.api.LocalSource
-import com.comi.reader.extension.api.SourceRegistry
-import com.comi.reader.extension.model.MangaStatus
-import kotlinx.coroutines.test.runTest
+import com.comi.reader.extension.model.AvailableSource
+import com.comi.reader.extension.model.Extension
+import com.comi.reader.extension.model.InstallStep
+import com.comi.reader.extension.repo.ExtensionRepoIndex
+import com.comi.reader.extension.repo.ExtensionRepoSource
+import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ExtensionTest {
 
+    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+
     @Test
-    fun `local source has correct properties`() {
-        val source = LocalSource()
-        assertEquals("local", source.id)
-        assertEquals("Local Storage", source.name)
-        assertEquals("all", source.language)
-        assertEquals("file://", source.baseUrl)
+    fun `extension available model has correct properties`() {
+        val ext = Extension.Available(
+            name = "MangaDex",
+            pkgName = "eu.kanade.tachiyomi.extension.en.mangadex",
+            versionName = "1.2.3",
+            versionCode = 123,
+            libVersion = 1.5,
+            lang = "en",
+            isNsfw = false,
+            sources = listOf(
+                AvailableSource(id = 1L, lang = "en", name = "MangaDex", baseUrl = "https://mangadex.org"),
+            ),
+            apkName = "tachiyomi-en-mangadex-v1.2.3.apk",
+            iconUrl = "https://example.com/icon.png",
+            repoUrl = "https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json",
+        )
+        assertEquals("MangaDex", ext.name)
+        assertEquals("en", ext.lang)
+        assertFalse(ext.isNsfw)
+        assertEquals(1, ext.sources.size)
+        assertEquals("MangaDex", ext.sources.first().name)
     }
 
     @Test
-    fun `local source search returns empty`() = runTest {
-        val source = LocalSource()
-        val results = source.search("test", 1)
-        assertTrue(results.isEmpty())
+    fun `install step enum has all values`() {
+        assertEquals(6, InstallStep.entries.size)
+        assertTrue(InstallStep.entries.contains(InstallStep.Idle))
+        assertTrue(InstallStep.entries.contains(InstallStep.Downloading))
+        assertTrue(InstallStep.entries.contains(InstallStep.Installing))
+        assertTrue(InstallStep.entries.contains(InstallStep.Installed))
+        assertTrue(InstallStep.entries.contains(InstallStep.Error))
     }
 
     @Test
-    fun `local source popular returns empty`() = runTest {
-        val source = LocalSource()
-        val results = source.getPopular(1)
-        assertTrue(results.isEmpty())
+    fun `extension repo index deserialization`() {
+        val jsonStr = """[
+            {
+                "name": "Tachiyomi: MangaDex",
+                "pkg": "eu.kanade.tachiyomi.extension.en.mangadex",
+                "apk": "tachiyomi-en-mangadex-v1.2.3.apk",
+                "lang": "en",
+                "code": 123,
+                "version": "1.2.3",
+                "nsfw": 0,
+                "sources": [
+                    {"name": "MangaDex", "lang": "en", "id": 2499283573021220255, "baseUrl": "https://mangadex.org"}
+                ]
+            }
+        ]"""
+        val index = json.decodeFromString<List<ExtensionRepoIndex>>(jsonStr)
+        assertEquals(1, index.size)
+        assertEquals("Tachiyomi: MangaDex", index[0].name)
+        assertEquals("eu.kanade.tachiyomi.extension.en.mangadex", index[0].pkg)
+        assertEquals("en", index[0].lang)
+        assertEquals(0, index[0].nsfw)
+        assertEquals(1, index[0].sources.size)
+        assertEquals("MangaDex", index[0].sources[0].name)
     }
 
     @Test
-    fun `local source details extracts title from path`() = runTest {
-        val source = LocalSource()
-        val details = source.getMangaDetails("/path/to/comic.cbz")
-        assertEquals("comic", details.title)
-        assertEquals("/path/to/comic.cbz", details.url)
-        assertEquals(MangaStatus.UNKNOWN, details.status)
+    fun `extension repo index deserialization without sources`() {
+        val jsonStr = """[
+            {
+                "name": "Test Extension",
+                "pkg": "test.pkg",
+                "apk": "test.apk",
+                "lang": "all",
+                "code": 1,
+                "version": "0.1"
+            }
+        ]"""
+        val index = json.decodeFromString<List<ExtensionRepoIndex>>(jsonStr)
+        assertEquals(1, index.size)
+        assertEquals(0, index[0].sources.size)
     }
 
     @Test
-    fun `local source chapter list returns single chapter`() = runTest {
-        val source = LocalSource()
-        val chapters = source.getChapterList("/comic.cbz")
-        assertEquals(1, chapters.size)
-        assertEquals("Full Comic", chapters[0].title)
-        assertEquals(1f, chapters[0].number, 0.01f)
-    }
-
-    @Test
-    fun `source registry register and retrieve`() {
-        val registry = SourceRegistry()
-        val source = LocalSource()
-        registry.register(source)
-
-        assertNotNull(registry.getSource("local"))
-        assertEquals("Local Storage", registry.getSource("local")?.name)
-    }
-
-    @Test
-    fun `source registry unregister`() {
-        val registry = SourceRegistry()
-        val source = LocalSource()
-        registry.register(source)
-        registry.unregister("local")
-
-        assertNull(registry.getSource("local"))
-    }
-
-    @Test
-    fun `source registry get all sources`() {
-        val registry = SourceRegistry()
-        registry.register(LocalSource())
-
-        assertEquals(1, registry.getAllSources().size)
-    }
-
-    @Test
-    fun `source registry get by language`() {
-        val registry = SourceRegistry()
-        registry.register(LocalSource())
-
-        assertEquals(1, registry.getSourcesByLanguage("all").size)
-        assertEquals(0, registry.getSourcesByLanguage("en").size)
-    }
-
-    @Test
-    fun `manga status enum has all values`() {
-        assertEquals(5, MangaStatus.entries.size)
-        assertTrue(MangaStatus.entries.contains(MangaStatus.ONGOING))
-        assertTrue(MangaStatus.entries.contains(MangaStatus.COMPLETED))
+    fun `extension repo source has correct properties`() {
+        val source = ExtensionRepoSource(
+            name = "MangaDex",
+            lang = "en",
+            id = 2499283573021220255,
+            baseUrl = "https://mangadex.org",
+        )
+        assertEquals("MangaDex", source.name)
+        assertEquals("en", source.lang)
+        assertEquals(2499283573021220255, source.id)
     }
 }

@@ -1,49 +1,75 @@
 package com.comi.reader.extension.model
 
-data class MangaDetails(
-    val url: String,
-    val title: String,
-    val coverUrl: String? = null,
-    val author: String? = null,
-    val artist: String? = null,
-    val description: String? = null,
-    val genres: List<String> = emptyList(),
-    val status: MangaStatus = MangaStatus.UNKNOWN
-)
+import android.graphics.drawable.Drawable
+import eu.kanade.tachiyomi.source.Source
 
-enum class MangaStatus {
-    ONGOING, COMPLETED, HIATUS, CANCELLED, UNKNOWN
+sealed class Extension {
+    abstract val name: String
+    abstract val pkgName: String
+    abstract val versionName: String
+    abstract val versionCode: Long
+    abstract val lang: String?
+    abstract val isNsfw: Boolean
+
+    data class Installed(
+        override val name: String,
+        override val pkgName: String,
+        override val versionName: String,
+        override val versionCode: Long,
+        override val lang: String,
+        override val isNsfw: Boolean,
+        val pkgFactory: String?,
+        val sources: List<Source>,
+        val icon: Drawable?,
+        val hasUpdate: Boolean = false,
+        val isObsolete: Boolean = false,
+        val isShared: Boolean,
+        val repoUrl: String? = null,
+    ) : Extension()
+
+    data class Available(
+        override val name: String,
+        override val pkgName: String,
+        override val versionName: String,
+        override val versionCode: Long,
+        val libVersion: Double,
+        override val lang: String,
+        override val isNsfw: Boolean,
+        val sources: List<AvailableSource>,
+        val apkName: String,
+        val iconUrl: String,
+        val repoUrl: String,
+    ) : Extension()
+
+    data class Untrusted(
+        override val name: String,
+        override val pkgName: String,
+        override val versionName: String,
+        override val versionCode: Long,
+        override val lang: String,
+        override val isNsfw: Boolean,
+        val signatureHash: String,
+    ) : Extension()
 }
 
-data class MangaChapter(
-    val url: String,
-    val title: String,
-    val number: Float = 0f,
-    val dateUpload: Long = 0,
-    val scanlator: String? = null
-)
-
-data class MangaPage(
-    val index: Int,
-    val imageUrl: String,
-    val headers: Map<String, String> = emptyMap()
-)
-
-data class Extension(
-    val id: String,
+data class AvailableSource(
+    val id: Long,
+    val lang: String,
     val name: String,
-    val versionName: String,
-    val versionCode: Int,
-    val language: String,
-    val isInstalled: Boolean = false,
-    val hasUpdate: Boolean = false,
-    val iconUrl: String? = null,
-    val sources: List<SourceInfo> = emptyList()
+    val baseUrl: String,
 )
 
-data class SourceInfo(
-    val id: String,
-    val name: String,
-    val language: String,
-    val baseUrl: String
-)
+sealed interface LoadResult {
+    data class Success(val extension: Extension.Installed) : LoadResult
+    data class Untrusted(val extension: Extension.Untrusted) : LoadResult
+    data object Error : LoadResult
+}
+
+enum class InstallStep {
+    Idle,
+    Pending,
+    Downloading,
+    Installing,
+    Installed,
+    Error,
+}

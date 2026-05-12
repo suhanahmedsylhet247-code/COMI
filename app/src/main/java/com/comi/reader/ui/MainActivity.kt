@@ -24,8 +24,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.comi.reader.domain.model.ThemeMode
 import com.comi.reader.ui.backup.BackupScreen
+import com.comi.reader.ui.browse.BrowseScreen
 import com.comi.reader.ui.category.CategoryScreen
-import com.comi.reader.ui.components.BrowseScreen
 import com.comi.reader.ui.detail.ComicDetailScreen
 import com.comi.reader.ui.downloads.DownloadsScreen
 import com.comi.reader.ui.history.HistoryScreen
@@ -36,6 +36,8 @@ import com.comi.reader.ui.reader.ReaderScreen
 import com.comi.reader.ui.search.SearchScreen
 import com.comi.reader.ui.settings.SettingsScreen
 import com.comi.reader.ui.settings.SettingsViewModel
+import com.comi.reader.ui.source.SourceBrowseScreen
+import com.comi.reader.ui.source.MangaDetailScreen
 import com.comi.reader.ui.statistics.StatisticsScreen
 import com.comi.reader.ui.theme.ComiTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -117,7 +119,46 @@ fun ComiApp() {
                 }
 
                 composable(Screen.Browse.route) {
-                    BrowseScreen()
+                    BrowseScreen(
+                        onSourceClick = { sourceId ->
+                            navController.navigate(Screen.SourceBrowse.createRoute(sourceId))
+                        }
+                    )
+                }
+
+                composable(
+                    Screen.SourceBrowse.route,
+                    arguments = listOf(navArgument("sourceId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val sourceId = backStackEntry.arguments?.getLong("sourceId") ?: return@composable
+                    SourceBrowseScreen(
+                        sourceId = sourceId,
+                        onBack = { navController.popBackStack() },
+                        onMangaClick = { mangaUrl, srcId ->
+                            navController.navigate(Screen.MangaDetail.createRoute(mangaUrl, srcId))
+                        }
+                    )
+                }
+
+                composable(
+                    Screen.MangaDetail.route,
+                    arguments = listOf(
+                        navArgument("mangaUrl") { type = NavType.StringType },
+                        navArgument("sourceId") { type = NavType.LongType },
+                    )
+                ) { backStackEntry ->
+                    val mangaUrl = java.net.URLDecoder.decode(
+                        backStackEntry.arguments?.getString("mangaUrl") ?: return@composable, "UTF-8"
+                    )
+                    val sourceId = backStackEntry.arguments?.getLong("sourceId") ?: return@composable
+                    MangaDetailScreen(
+                        mangaUrl = mangaUrl,
+                        sourceId = sourceId,
+                        onBack = { navController.popBackStack() },
+                        onReadChapter = { comicId, _ ->
+                            navController.navigate(Screen.Reader.createRoute(comicId))
+                        }
+                    )
                 }
 
                 composable(Screen.Settings.route) {
